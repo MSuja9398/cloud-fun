@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Genesys Chat Testing Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0f1a;
+      --surface: #131726;
+      --surface2: #1b2035;
+      --border: rgba(99,120,255,0.15);
+      --border-bright: rgba(99,120,255,0.35);
+      --accent: #6378ff;
+      --accent2: #3ddbb7;
+      --accent3: #ff6b6b;
+      --text: #e8ecff;
+      --muted: #7a82a8;
+      --tag-bg: rgba(99,120,255,0.1);
+      --success: #3ddbb7;
+      --warning: #f5c842;
+      --danger: #ff6b6b;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+      --display: 'Syne', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99,120,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,120,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow orbs */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(99,120,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(12,15,26,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo-dot {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: #fff; font-weight: 800;
+    }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--surface2); }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(61,219,183,0.08);
+      border: 1px solid rgba(61,219,183,0.2);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--success);
+      font-family: var(--mono);
+    }
+    .status-pill::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* HERO */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--tag-bg);
+      border: 1px solid var(--border-bright);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--accent);
+      font-family: var(--mono);
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-family: var(--display);
+      font-size: clamp(36px, 5vw, 58px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 36px;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #7a8fff; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-bright);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: var(--surface2); }
+
+    /* SECTION TITLES */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: var(--display);
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .section-sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    /* SETUP STEPS */
+    .setup { padding: 60px 0; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .step-card:hover { border-color: var(--border-bright); }
+    .step-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--tag-bg);
+      border: 1px solid var(--border-bright);
+      border-radius: 6px;
+      padding: 3px 8px;
+      display: inline-block;
+      margin-bottom: 14px;
+    }
+    .step-card h3 {
+      font-family: var(--display);
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .step-card p { color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+
+    /* CODE EMBED SECTION */
+    .embed-section { padding: 60px 0; }
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .code-header-left { display: flex; align-items: center; gap: 10px; }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dots span {
+      width: 11px; height: 11px; border-radius: 50%;
+    }
+    .code-dots span:nth-child(1) { background: #ff6b6b; }
+    .code-dots span:nth-child(2) { background: #f5c842; }
+    .code-dots span:nth-child(3) { background: #3ddbb7; }
+    .code-filename {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .copy-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--tag-bg);
+      border: 1px solid var(--border-bright);
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover { background: rgba(99,120,255,0.2); }
+    .code-body {
+      padding: 24px;
+      overflow-x: auto;
+    }
+    .code-body pre {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre;
+    }
+    .c-comment { color: #4a5480; }
+    .c-tag { color: #ff6b6b; }
+    .c-attr { color: var(--accent2); }
+    .c-str { color: var(--warning); }
+    .c-key { color: var(--accent); }
+
+    /* TEST PANELS */
+    .test-section { padding: 60px 0; }
+    .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .test-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .test-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .test-card h3 {
+      font-family: var(--display);
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .test-card p { color: var(--muted); font-size: 13px; }
+    .badge {
+      font-size: 11px;
+      font-family: var(--mono);
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-blue { background: rgba(99,120,255,0.12); color: var(--accent); border: 1px solid rgba(99,120,255,0.2); }
+    .badge-green { background: rgba(61,219,183,0.1); color: var(--success); border: 1px solid rgba(61,219,183,0.2); }
+    .badge-orange { background: rgba(245,200,66,0.1); color: var(--warning); border: 1px solid rgba(245,200,66,0.2); }
+    .badge-red { background: rgba(255,107,107,0.1); color: var(--danger); border: 1px solid rgba(255,107,107,0.2); }
+
+    .test-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13.5px;
+      outline: none;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+    .test-input:focus { border-color: var(--accent); }
+    .test-input::placeholder { color: var(--muted); }
+
+    .send-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .send-btn:hover { background: #7a8fff; }
+    .send-btn:active { transform: scale(0.98); }
+
+    .quick-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .quick-tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--mono);
+    }
+    .quick-tag:hover { border-color: var(--accent); color: var(--accent); background: var(--tag-bg); }
+
+    /* CHECKLIST */
+    .checklist { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+    }
+    .check-box {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      border: 1.5px solid var(--border-bright);
+      flex-shrink: 0;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .check-box.done {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .check-box.done::after {
+      content: '✓';
+      color: #0c0f1a;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .check-label { color: var(--muted); }
+    .check-label.done { color: var(--text); text-decoration: line-through; }
+
+    /* CHAT PREVIEW */
+    .chat-preview {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+    .msg {
+      display: flex; gap: 8px; align-items: flex-end;
+    }
+    .msg.bot { flex-direction: row; }
+    .msg.user { flex-direction: row-reverse; }
+    .msg-bubble {
+      max-width: 75%;
+      padding: 9px 13px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .msg.bot .msg-bubble {
+      background: var(--surface);
+      color: var(--text);
+      border-bottom-left-radius: 3px;
+    }
+    .msg.user .msg-bubble {
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 3px;
+    }
+    .msg-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .msg.bot .msg-avatar { background: rgba(99,120,255,0.2); color: var(--accent); }
+    .msg.user .msg-avatar { background: rgba(61,219,183,0.2); color: var(--success); }
+
+    /* DIVIDER */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 36px 0;
+      text-align: center;
+    }
+    footer p { color: var(--muted); font-size: 13px; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .genesys-embed-placeholder {
+      background: var(--surface2);
+      border: 2px dashed var(--border-bright);
+      border-radius: 14px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .genesys-embed-placeholder h3 {
+      font-family: var(--display);
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .genesys-embed-placeholder p {
+      color: var(--muted);
+      font-size: 13.5px;
+      margin-bottom: 20px;
+    }
+    .arrow-icon { font-size: 22px; margin-bottom: 12px; display: block; }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .hero { padding: 48px 0 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap nav-inner">
+    <a href="#" class="logo">
+      <div class="logo-dot">G</div>
+      ChatTest Portal
+    </a>
+    <div class="nav-links">
+      <a href="#setup">Setup</a>
+      <a href="#embed">Embed</a>
+      <a href="#test">Test</a>
+      <a href="#checklist">Checklist</a>
+    </div>
+    <div class="status-pill">Portal live</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-badge">⚡ Genesys Cloud · Testing Environment</div>
+    <h1>Your Chatbot<br/><span>Testing Portal</span></h1>
+    <p>A clean workspace to test, validate, and debug your Genesys Cloud Web Messenger integration before going to production.</p>
+    <div class="hero-actions">
+      <a href="#embed" class="btn btn-primary">Add Embed Code</a>
+      <a href="#test" class="btn btn-outline">Start Testing</a>
+    </div>
+  </section>
+
+  <!-- SETUP STEPS -->
+  <section class="setup" id="setup">
+    <div class="section-label">Getting started</div>
+    <div class="section-title">3 steps to get running</div>
+    <div class="section-sub">Follow these to connect your Genesys Cloud bot to this portal.</div>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">Step 01</div>
+        <h3>Get your Embed Script</h3>
+        <p>In Genesys Cloud, go to <strong>Admin → Messenger → Deployments</strong>. Copy the JavaScript snippet from your deployment configuration.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 02</div>
+        <h3>Paste into this file</h3>
+        <p>Find the <code style="font-family:var(--mono);font-size:12px;color:var(--accent2);">&lt;!-- GENESYS EMBED --&gt;</code> comment below and replace it with your snippet from the Genesys dashboard.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 03</div>
+        <h3>Host on GitHub Pages</h3>
+        <p>Push this <code style="font-family:var(--mono);font-size:12px;color:var(--accent2);">index.html</code> file to a GitHub repo and enable Pages under <strong>Settings → Pages</strong>. Your portal is live instantly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EMBED CODE SECTION -->
+  <section class="embed-section" id="embed">
+    <div class="section-label">Integration</div>
+    <div class="section-title">Paste your embed snippet here</div>
+    <div class="section-sub">Replace the placeholder comment below with your actual Genesys Cloud Web Messenger code.</div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-filename">index.html — embed location</div>
+        </div>
+        <button class="copy-btn" onclick="copyCode()">Copy</button>
+      </div>
+      <div class="code-body">
+        <pre id="embed-code"><span class="c-comment">&lt;!-- ============================================
+     STEP 1: REPLACE THIS BLOCK WITH YOUR
+     GENESYS CLOUD WEB MESSENGER SNIPPET
+     Get it from: Admin → Messenger → Deployments
+     ============================================ --&gt;</span>
+
+<span class="c-tag">&lt;script </span><span class="c-attr">type</span>=<span class="c-str">"text/javascript"</span><span class="c-tag">&gt;</span>
+  <span class="c-comment">// Paste your Genesys Cloud deployment snippet here.</span>
+  <span class="c-comment">// It will look something like this:</span>
+
+  <span class="c-comment">// (function(g,e,n,s,i,o,n){</span>
+  <span class="c-comment">//   g[i]=g[i]||function(){(g[i].q=g[i].q||[]).push(arguments)}</span>
+  <span class="c-comment">//   ...your actual snippet...</span>
+  <span class="c-comment">// })(window,document,'genesys','snippet','Genesys');</span>
+
+  <span class="c-comment">// Genesys('subscribe', 'Messenger.ready', function() {</span>
+  <span class="c-comment">//   console.log('Genesys Messenger is ready!');</span>
+  <span class="c-comment">// });</span>
+<span class="c-tag">&lt;/script&gt;</span>
+
+<span class="c-comment">&lt;!-- ============================================
+     END OF GENESYS EMBED — no changes needed below
+     ============================================ --&gt;</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE EMBED PLACEHOLDER -->
+  <section style="padding-bottom: 60px;">
+    <div class="genesys-embed-placeholder">
+      <span class="arrow-icon">💬</span>
+      <h3>Your Genesys Chat Widget Will Appear Here</h3>
+      <p>Once you paste your embed code above and open this file in a browser,<br/>the Genesys Web Messenger button will appear (usually bottom-right corner).</p>
+      <a href="https://help.mypurecloud.com/articles/deploy-messenger/" target="_blank" class="btn btn-outline" style="display:inline-flex;">
+        View Genesys Docs ↗
+      </a>
+    </div>
+
+    <!-- ============================================
+         PASTE YOUR GENESYS SNIPPET BELOW THIS LINE
+         ============================================ -->
+
+
+
+    <!-- ============================================
+         END OF GENESYS EMBED
+         ============================================ -->
+  </section>
+
+  <!-- TEST PANELS -->
+  <section class="test-section" id="test">
+    <div class="section-label">Testing</div>
+    <div class="section-title">Test scenarios</div>
+    <div class="section-sub">Use these panels to simulate different conversation flows and edge cases.</div>
+
+    <div class="test-grid">
+
+      <!-- Conversation Starter -->
+      <div class="test-card">
+        <div class="test-card-header">
+          <div>
+            <h3>Conversation Triggers</h3>
+            <p>Test bot opening messages</p>
+          </div>
+          <span class="badge badge-blue">Input</span>
+        </div>
+        <div class="quick-tags">
+          <span class="quick-tag" onclick="setInput('test-msg', this.textContent)">Hi, I need help</span>
+          <span class="quick-tag" onclick="setInput('test-msg', this.textContent)">Talk to an agent</span>
+          <span class="quick-tag" onclick="setInput('test-msg', this.textContent)">Cancel my order</span>
+          <span class="quick-tag" onclick="setInput('test-msg', this.textContent)">Reset password</span>
+          <span class="quick-tag" onclick="setInput('test-msg', this.textContent)">Refund request</span>
+        </div>
+        <input class="test-input" id="test-msg" placeholder="Type a test message or pick one above…"/>
+        <button class="send-btn" onclick="sendToBot('test-msg')">Open Chat &amp; Send →</button>
+      </div>
+
+      <!-- Chat Preview Mock -->
+      <div class="test-card">
+        <div class="test-card-header">
+          <div>
+            <h3>Chat Flow Preview</h3>
+            <p>Simulated response structure</p>
+          </div>
+          <span class="badge badge-green">Preview</span>
+        </div>
+        <div class="chat-preview" id="chat-preview">
+          <div class="msg bot">
+            <div class="msg-avatar">G</div>
+            <div class="msg-bubble">Hi! Welcome. How can I help you today?</div>
+          </div>
+          <div class="msg user">
+            <div class="msg-avatar">U</div>
+            <div class="msg-bubble" id="preview-user-msg">I need help with my account</div>
+          </div>
+          <div class="msg bot">
+            <div class="msg-avatar">G</div>
+            <div class="msg-bubble">Sure! I can help with that. Are you looking to reset your password, update billing, or something else?</div>
+          </div>
+        </div>
+        <input class="test-input" id="preview-msg" placeholder="Type to update preview…" oninput="updatePreview(this.value)"/>
+      </div>
+
+      <!-- Edge Cases -->
+      <div class="test-card">
+        <div class="test-card-header">
+          <div>
+            <h3>Edge Case Testing</h3>
+            <p>Stress test your bot's fallback</p>
+          </div>
+          <span class="badge badge-orange">Edge</span>
+        </div>
+        <div class="quick-tags">
+          <span class="quick-tag" onclick="setInput('edge-msg', this.textContent)">asdfghjkl</span>
+          <span class="quick-tag" onclick="setInput('edge-msg', this.textContent)">!!!###@@@</span>
+          <span class="quick-tag" onclick="setInput('edge-msg', this.textContent)">😡😡😡</span>
+          <span class="quick-tag" onclick="setInput('edge-msg', this.textContent)">Lorem ipsum dolor sit amet consectetur adipiscing elit sed do</span>
+          <span class="quick-tag" onclick="setInput('edge-msg', this.textContent)">(empty)</span>
+        </div>
+        <input class="test-input" id="edge-msg" placeholder="Or type a custom edge case…"/>
+        <button class="send-btn" onclick="sendToBot('edge-msg')" style="background:var(--warning);color:#0c0f1a;">Test Edge Case →</button>
+      </div>
+
+      <!-- Escalation Test -->
+      <div class="test-card">
+        <div class="test-card-header">
+          <div>
+            <h3>Escalation Phrases</h3>
+            <p>Test handoff to live agent</p>
+          </div>
+          <span class="badge badge-red">Escalation</span>
+        </div>
+        <div class="quick-tags">
+          <span class="quick-tag" onclick="setInput('esc-msg', this.textContent)">Speak to human</span>
+          <span class="quick-tag" onclick="setInput('esc-msg', this.textContent)">I want a real person</span>
+          <span class="quick-tag" onclick="setInput('esc-msg', this.textContent)">This is urgent</span>
+          <span class="quick-tag" onclick="setInput('esc-msg', this.textContent)">Transfer me now</span>
+          <span class="quick-tag" onclick="setInput('esc-msg', this.textContent)">Your bot is broken</span>
+        </div>
+        <input class="test-input" id="esc-msg" placeholder="Or type a custom escalation…"/>
+        <button class="send-btn" onclick="sendToBot('esc-msg')" style="background:var(--danger);">Test Escalation →</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section style="padding-bottom: 80px;" id="checklist">
+    <div class="section-label">QA Checklist</div>
+    <div class="section-title">Pre-launch verification</div>
+    <div class="section-sub">Check these off before going live with your bot.</div>
+
+    <div class="test-grid">
+      <div class="test-card">
+        <h3 style="margin-bottom:16px;">Bot Behaviour</h3>
+        <div class="checklist" id="checklist-bot">
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Bot greets user on open</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Fallback triggers on unrecognised input</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Quick replies / buttons appear</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Typing indicators visible</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Bot handles empty / blank messages</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Long messages render correctly</span></div>
+        </div>
+      </div>
+      <div class="test-card">
+        <h3 style="margin-bottom:16px;">Integration & Escalation</h3>
+        <div class="checklist">
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Escalation to live agent works</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Queue / wait message displayed</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Agent name shown on connect</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Conversation data in Genesys dashboard</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">Flows trigger correctly per intent</span></div>
+          <div class="check-item"><div class="check-box" onclick="toggle(this)"></div><span class="check-label">No CORS / console errors</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <p>Genesys Cloud Testing Portal &mdash; Built for pre-production QA &nbsp;·&nbsp; <a href="https://help.mypurecloud.com/" target="_blank">Genesys Docs</a> &nbsp;·&nbsp; <a href="https://developer.genesys.cloud/" target="_blank">Developer Center</a></p>
+    <p style="margin-top:8px;font-size:12px;">Replace the embed placeholder with your Genesys deployment snippet and host on GitHub Pages for a free live URL.</p>
+  </div>
+</footer>
+
+<script>
+  function copyCode() {
+    const code = document.getElementById('embed-code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  function setInput(id, val) {
+    const el = document.getElementById(id);
+    if (el) { el.value = val === '(empty)' ? '' : val; el.focus(); }
+  }
+
+  function sendToBot(inputId) {
+    const val = document.getElementById(inputId).value;
+    if (typeof Genesys !== 'undefined') {
+      try {
+        Genesys('command', 'Messenger.open');
+        if (val) {
+          setTimeout(() => {
+            Genesys('command', 'MessagingService.sendMessage', { message: val });
+          }, 800);
+        }
+      } catch(e) {
+        alert('Genesys Messenger not loaded yet. Paste your embed snippet first!');
+      }
+    } else {
+      alert('Genesys Messenger not detected.\n\nPaste your Genesys Cloud embed snippet into the marked section of this HTML file, then reload.');
+    }
+  }
+
+  function updatePreview(val) {
+    const el = document.getElementById('preview-user-msg');
+    if (el && val.trim()) el.textContent = val;
+  }
+
+  function toggle(box) {
+    box.classList.toggle('done');
+    const label = box.nextElementSibling;
+    label.classList.toggle('done');
+  }
+</script>
+
+</body>
+</html>
